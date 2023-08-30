@@ -205,7 +205,11 @@ void switch_event_handler(lv_event_t *event) {
         lv_obj_del(list); // Remove the network list
         Serial.println("Network List Removed");
         list = NULL;
+
         // WiFi.scanDelete();
+        WiFi.disconnect();
+        delay(2000);
+        Serial.println("Disconnected from WiFi");
       }
     }
   }
@@ -529,51 +533,6 @@ static void text_input_event_cb(lv_event_t *e) {
     active_text_area = NULL;
   }
 }
-
-
-// void setupWiFiSettings()
-// {
-//   Serial.println("Setting up WIFI");
-//   lv_obj_t *network_list = lv_label_create(Screen2);
-//   lv_label_set_text(network_list, "Scanning for networks...");
-//   lv_obj_align(network_list, LV_ALIGN_CENTER, 0, 0);
-//   lv_obj_set_style_text_color(network_list, lv_color_hex(0xFFFFFF), LV_PART_MAIN);
-
-//   int numNetworks = WiFi.scanNetworks();
-//   if (numNetworks == 0) {
-//     lv_label_set_text(network_list, "No networks found");
-//   } else {
-//     lv_obj_del(network_list);  // Remove the "Scanning for networks..." label
-
-//     lv_obj_t *list = lv_list_create(Screen2);
-//     lv_obj_set_size(list, LV_HOR_RES, LV_VER_RES - 85);
-//     lv_obj_align(list, LV_ALIGN_CENTER, 0, 0);
-
-//     for (int i = 0; i < numNetworks; ++i) {
-//       const char *networkName = WiFi.SSID(i).c_str();
-//       lv_obj_t *network_item = lv_list_add_btn(list, LV_SYMBOL_WIFI, networkName);
-
-//       // Store the selected index as user data
-//       lv_obj_set_user_data(network_item, (void *)i);
-
-//       lv_obj_add_event_cb(
-//         network_item, [](lv_event_t *btn) {
-//           if (lv_event_get_code(btn) == LV_EVENT_SHORT_CLICKED) {
-//             lv_obj_t *btn_obj = lv_event_get_target(btn);
-//             int selected_index = (int)lv_obj_get_user_data(btn_obj);
-//             const char *selected_network = WiFi.SSID(selected_index).c_str();
-//             // Handle the selected network (e.g., connect to it)
-
-//             Serial.print("Selected network: ");
-//             Serial.println(selected_network);
-//             buildPWMsgBox(selected_network);
-//           }
-//         },
-//         LV_EVENT_SHORT_CLICKED, NULL);
-//     }
-//   }
-//     Serial.println("Setup WIFI done");
-// }
 
 void deleteTask(void *task) {
   vTaskDelete(task);
