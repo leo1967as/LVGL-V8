@@ -1,5 +1,3 @@
-#include <EEPROM.h>
-
 /*Using LVGL with Arduino requires some extra steps:
   Be sure to read the docs here: https://docs.lvgl.io/master/get-started/platforms/arduino.html  */
 
@@ -79,7 +77,7 @@ static lv_timer_t *timer;
 static lv_obj_t *popupWait, *msgpopupWait;
 
 // Task
-TaskHandle_t ntScanTaskHandler, ntConnectTaskHandler;
+TaskHandle_t ntScanTaskHandler, ntConnectTaskHandler , scanNetworksTaskHandle;
 String selectedSSID, password;
 ////////////////
 void btn_event_handler(lv_event_t *btn) {
@@ -197,7 +195,7 @@ void switch_event_handler(lv_event_t *event) {
       scanning_enabled = true;
       lv_label_set_text(network_list, "Scanning for networks...");
       Serial.println("Scanning for networks...");
-      xTaskCreatePinnedToCore(scanNetworksTask, "scanNetworksTask", 8192, NULL, 1, NULL,1);
+      xTaskCreatePinnedToCore(scanNetworksTask, "scanNetworksTask", 8192, NULL, 1, &scanNetworksTaskHandle, 1);
     } else if (!switch_state && scanning_enabled) {
       // Turn off scanning
       scanning_enabled = false;
@@ -213,8 +211,51 @@ void switch_event_handler(lv_event_t *event) {
   }
 }
 
+void connectToWiFi(const char *selectedSSID, const char *password)
+{
+  Serial.print(" Using : ");
+  Serial.println(String(selectedSSID));
 
+  Serial.print(" Using : ");
+  Serial.println(String(password));
 
+  if (WiFi.begin(selectedSSID, password) == WL_CONNECTED)
+  {
+  }
+  else
+  {
+    Serial.println("Waiting for WiFi connection...");
+    unsigned long startTime = millis();
+    const unsigned long connectionTimeout = 10000; // 10 seconds timeout
+    bool connected = false;
+
+    while (!connected && (millis() - startTime < connectionTimeout))
+    {
+      if (WiFi.status() == WL_CONNECTED)
+      {
+        Serial.println("WiFi connected");
+        lv_obj_set_style_text_color(settinglabel, lv_color_hex(0x00FF00), LV_PART_MAIN); // Green WIFI
+        lv_label_set_text(settinglabel2, " WIFI CONNECTED ");
+        lv_obj_set_style_text_color(settinglabel2, lv_color_hex(0x00FF00), LV_PART_MAIN); // Green Connectded
+        Serial.println("WiFi GREEN");
+        wifiConnected = true; // Set the Wi-Fi connection status to true
+        connected = true;
+        saveCredentialEEPROM(selectedSSID, password);
+      }
+      else
+      {
+        Serial.println("tried");
+        delay(500); // Wait for 1 second before checking again
+      }
+    }
+
+    if (!connected)
+    {
+      Serial.println("WiFi connection failed");
+      // TODO: Add additional error handling if needed
+    }
+  }
+}
 
 void scanNetworksTask(void *parameter) {
   // Scanning for networks
@@ -665,42 +706,7 @@ void tryPreviousNetwork() {
 
 
 
-  void connectToWiFi(const char *selectedSSID, const char *password) {
-Serial.print(" Using : ");
-Serial.println(String(selectedSSID));
 
-Serial.print(" Using : ");
-Serial.println(String(password));
-
-    if (WiFi.begin(selectedSSID, password) == WL_CONNECTED) {
-    } else {
-      Serial.println("Waiting for WiFi connection...");
-      unsigned long startTime = millis();
-      const unsigned long connectionTimeout = 10000;  // 10 seconds timeout
-      bool connected = false;
-
-      while (!connected && (millis() - startTime < connectionTimeout)) {
-        if (WiFi.status() == WL_CONNECTED) {
-          Serial.println("WiFi connected");
-          lv_obj_set_style_text_color(settinglabel, lv_color_hex(0x00FF00), LV_PART_MAIN);  //Green WIFI
-          lv_label_set_text(settinglabel2, " WIFI CONNECTED ");
-          lv_obj_set_style_text_color(settinglabel2, lv_color_hex(0x00FF00), LV_PART_MAIN);  //Green Connectded
-          Serial.println("WiFi GREEN");
-          wifiConnected = true;  // Set the Wi-Fi connection status to true
-          connected = true;
-          saveCredentialEEPROM(selectedSSID,password);
-        } else {
-          Serial.println("tried");
-          delay(500);  // Wait for 1 second before checking again
-        }
-      }
-
-      if (!connected) {
-        Serial.println("WiFi connection failed");
-        // TODO: Add additional error handling if needed
-      }
-    }
-  }
 //////
 //**NETWORK Tasks
 //////
