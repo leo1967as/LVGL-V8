@@ -254,7 +254,7 @@
                 "ARDUINO_VARIANT=\"esp32\"",
                 "ARDUINO_PARTITION_default",
                 "ESP32",
-                "CORE_DEBUG_LEVEL=0",
+                "CORE_DEBUG_LEVEL=4",
                 "BOARD_HAS_PSRAM",
                 "ARDUINO_USB_CDC_ON_BOOT=0",
                 "__DBL_MIN_EXP__=(-1021)",
